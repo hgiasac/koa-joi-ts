@@ -1,0 +1,37 @@
+{
+  "name": "koa2-joi-validator",
+  "version": "1.0.2",
+  "description": "Koa 2 Joi validator",
+  "main": "./lib/index.js",
+  "types": "./lib/index.d.ts",
+  "scripts": {
+    "build": "rm -r lib && tsc",
+    "prepare": "npm run build",
+    "test": "ecnpho \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hgiasac/koa-joi-ts.git"
+  },
+  "keywords": [
+    "koa",
+    "joi"
+  ],
+  "author": "Toan Nguyen",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/hgiasac/koa-joi-ts/issues"
+  },
+  "homepage": "https://github.com/hgiasac/koa-joi-ts#readme",
+  "peerDependencies": {
+    "joi": "*"
+  },
+  "devDependencies": {
+    "tslint": "^5.10.0",
+    "typescript": "^2.8.3"
+  },
+  "dependencies": {
+    "@types/joi": "*",
+    "@types/koa": "^2.0.45"
+  }
+}
