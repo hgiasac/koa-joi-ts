@@ -1,5 +1,6 @@
 import * as Joi from "joi";
 import { Context } from "koa";
+import * as parser from "co-body";
 
 export type FailureCallback = (ctx: Context, err: Joi.ValidationError) => any;
 export type ValidateFunction = (value: any, schema: Joi.SchemaLike, options: Joi.ValidationOptions) => Promise<any>;
@@ -25,12 +26,16 @@ export function KoaJoiValidator(options: IKoaJoiValidatorOptions) {
   return async (ctx: Context, next: () => any) => {
 
     try {
+      
+
       if (opts.body) {
-        ctx.body = await Joi.validate(ctx.body, opts.body, opts.options);
+        const body = await parser[opts.type](ctx);
+        (<any> ctx.request).body = await Joi.validate(body, opts.body, opts.options);
+
       }
 
       if (opts.headers) {
-        await Joi.validate(ctx.header, opts.body, opts.options);
+        await Joi.validate(ctx.header, opts.headers, opts.options);
       }
 
       if (opts.query) {

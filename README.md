@@ -9,6 +9,7 @@ A koa middleware which will validate and transform the request
 | param | type | required | description |
 |-------|------|------------------|-------------|
 | options | object | true | |
+| options.type | string | Default to `json` | the coBody parser to call, can be json form or text |
 | options.failure | int | (ctx: Context, err: ValidationError) => any | false | The error code or function to throw on case of validation error, default to 400 |
 | options.options | {} | false | Options passed to Joi validator, such as `allowUnknown` |
 | options.body | Joi.object | false | A joi schema validated against the request body | 
@@ -35,42 +36,49 @@ npm install koa2-joi-validator joi
 import { KoaJoiValidator } from "koa2-joi-validator";
 import * as Joi from "joi";
 
+
 router.post('/:number/:string/:date',
-  validator.validate({
+  KoaJoiValidator({
     type: 'json',
     params: {
       number: Joi.number().required(),
       string: Joi.string().required(),
-      date: Joi.date().required()
+      date: Joi.string().isoDate().required()
     },
     body: {
       number: Joi.number().required(),
       string: Joi.string().required(),
-      date: Joi.date().required()
+      date: Joi.string().isoDate().required()
     },
     headers: Joi.object({
       number: Joi.number().required(),
       string: Joi.string().required(),
-      date: Joi.date().required()
+      date: Joi.string().isoDate().required()
     }).options({ allowUnknown: true }),
     query: {
       number: Joi.number().required(),
       string: Joi.string().required(),
-      date: Joi.date().required()
+      date: Joi.string().isoDate().required()
+    },
+    failure(ctx: Koa.Context, err: Joi.ValidationError) {
+      console.log(err);
+      ctx.throw(400);
+      
     }
   }),
-  (ctx) => {
-    this.assert(typeof this.params.number === 'number');
-    this.assert(typeof this.params.string === 'string');
-    this.assert(this.params.date instanceof Date);
+  (ctx: Koa.Context) => {
+    expect(typeof ctx.params.number === 'number');
+    expect(typeof ctx.params.string === 'string');
+    expect(ctx.params.date instanceof Date);
 
-    ['body', 'headers', 'query'].forEach(el => {
-      this.assert(typeof this.request[el].number === 'number');
-      this.assert(typeof this.request[el].string === 'string');
-      this.assert(this.request[el].date instanceof Date);
+    ['body', 'headers', 'query'].forEach((el) => {
+      expect(typeof ctx.request[el].number === 'number');
+      expect(typeof ctx.request[el].string === 'string');
+      expect(ctx.request[el].date instanceof Date);
     });
 
-    this.status = 204;
-  }
+    ctx.status = 204;
+  },
+  
 );
 ```

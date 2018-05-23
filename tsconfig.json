@@ -22,10 +22,10 @@
     "src/index.ts"
   ],
   "include": [
-    "test"
+    "__tests__"
   ],
   "exclude": [
     "**/node_modules",
-    "test"
+    "__tests__"
   ]
 }
