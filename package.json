@@ -1,6 +1,6 @@
 {
   "name": "koa2-joi-validator",
-  "version": "1.0.2",
+  "version": "1.0.4",
   "description": "Koa 2 Joi validator",
   "main": "./lib/index.js",
   "types": "./lib/index.d.ts",

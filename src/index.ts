@@ -3,22 +3,53 @@ import { Context } from "koa";
 import * as parser from "co-body";
 
 export type FailureCallback = (ctx: Context, err: Joi.ValidationError) => any;
-export type ValidateFunction = (value: any, schema: Joi.SchemaLike, options: Joi.ValidationOptions) => Promise<any>;
+export type ValidateFunction = 
+  (value: any, schema: Joi.SchemaLike, options: Joi.ValidationOptions) => Promise<any>;
 
+export interface IParserOptions {
+  limit: string;
+  strict: boolean;
+  returnRawBody: boolean;
+}
+
+export enum KoaJoiValidatorType {
+  Json = "json",
+  Form = "form",
+  Text = "text",
+}
 export interface IKoaJoiValidatorOptions {
-  type?: "json" | "form" | "text";
+  type?: KoaJoiValidatorType;
   failure?: number | FailureCallback;
   options?: Joi.ValidationOptions;
   body?: Joi.SchemaLike;
   params?: Joi.SchemaLike;
   headers?: Joi.SchemaLike;
   query?: Joi.SchemaLike;
+  parserOptions?: IParserOptions;
+}
+
+function parseBody(
+  ctx: Context, options: IKoaJoiValidatorOptions): Promise<any> {
+
+  const parserOptions = { ...options.parserOptions };
+
+  switch (options.type) {
+    case KoaJoiValidatorType.Json:
+      return parser.json(ctx, parserOptions);
+    case KoaJoiValidatorType.Form:
+      return parser.form(ctx, parserOptions);
+    case KoaJoiValidatorType.Text:
+      return parser.text(ctx, parserOptions);
+    default: 
+      return parser(ctx, parserOptions);
+  }
+
 }
 
 export function KoaJoiValidator(options: IKoaJoiValidatorOptions) {
   
   const opts = {
-    type: "json",
+    type: KoaJoiValidatorType.Json,
     failure: 400,
     ...options,
   };
@@ -29,8 +60,11 @@ export function KoaJoiValidator(options: IKoaJoiValidatorOptions) {
       
 
       if (opts.body) {
-        const body = await parser[opts.type](ctx);
-        (<any> ctx.request).body = await Joi.validate(body, opts.body, opts.options);
+        const body = await parseBody(ctx, opts);
+        
+        (<any> ctx.request).body = await Joi.validate(
+          body, opts.body, opts.options
+        );
 
       }
 
@@ -51,11 +85,16 @@ export function KoaJoiValidator(options: IKoaJoiValidatorOptions) {
       return next();
 
     } catch (e) {
-      if (typeof opts.failure === "number") {
-        return ctx.throw(opts.failure, e);
+      if (typeof opts.failure === "function") {
+        
+        return opts.failure(ctx, e);
       }
-      
-      return opts.failure(ctx, e);
+
+      ctx.status = opts.failure;
+      ctx.body = {
+          message: e.message,
+          errors: e.details
+      };
     }
   }
 }
